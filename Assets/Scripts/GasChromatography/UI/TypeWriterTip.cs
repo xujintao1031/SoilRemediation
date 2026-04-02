@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -9,36 +8,33 @@ namespace GasChromatography.UI
 {
     public class TypeWriterTip : MonoBehaviour
     {
-        [Tooltip("UI Text 目标")]
-        public Text targetText;
+        [Tooltip("UI Text 目标")] public Text targetText;
 
-        [Tooltip("每个字符间隔（秒）")]
-        public float charInterval = 0.1f;
+        [Tooltip("每个字符间隔（秒）")] public float charInterval = 0.1f;
 
         [Tooltip("全部显示完成时触发（可在 Inspector 绑定）")]
         public UnityEvent onComplete;
 
+        private bool _completedInvoked;
+        private string _fullText;
+
+        private Coroutine _typing;
+
+        private void Awake()
+        {
+            if (targetText == null) Debug.LogWarning("[TypewriterTip] targetText 未设置。");
+        }
+
         // 代码订阅用
         public event Action OnComplete;
 
-        private Coroutine _typing;
-        private string _fullText;
-        private bool _completedInvoked;
-
-        void Awake()
-        {
-            if (targetText == null)
-            {
-                Debug.LogWarning("[TypewriterTip] targetText 未设置。");
-            }
-        }
-        
 
         // 重载：带回调
-        public void ShowTip(string text, Action finishedCallback = null, float? interval = null, Color? color = null, bool isFirstLineIndent = false)
+        public void ShowTip(string text, Action finishedCallback = null, float? interval = null, Color? color = null,
+            bool isFirstLineIndent = false)
         {
             if (targetText == null) return;
-            if(targetText.text == text) return;
+            if (targetText.text == text) return;
             if (interval.HasValue) charInterval = interval.Value;
             if (color.HasValue) targetText.color = color.Value;
 
@@ -47,11 +43,8 @@ namespace GasChromatography.UI
             _fullText = indent + text ?? "";
             _completedInvoked = false;
 
-            if (finishedCallback != null)
-            {
-                OnComplete += finishedCallback;
-            }
-            
+            if (finishedCallback != null) OnComplete += finishedCallback;
+
 
             _typing = StartCoroutine(TypeTextCoroutine());
         }
@@ -65,6 +58,7 @@ namespace GasChromatography.UI
                 StopCoroutine(_typing);
                 _typing = null;
             }
+
             targetText.text = _fullText ?? "";
             InvokeComplete();
         }
@@ -95,7 +89,7 @@ namespace GasChromatography.UI
                 yield break;
             }
 
-            for (int i = 0; i < _fullText.Length; i++)
+            for (var i = 0; i < _fullText.Length; i++)
             {
                 targetText.text += _fullText[i];
                 yield return new WaitForSeconds(charInterval);
